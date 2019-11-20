@@ -11,10 +11,10 @@
     <body>
         <script>
             const fn = function (e) {
-                console.log(e.data);
+                console.log(JSON.parse(e.data));
             };
 
-            const src = new EventSource("http://localhost:5000/sse", /* { withCredentials: true } */);
+            const src = new EventSource("http://localhost:5000/redirect", /* { withCredentials: true } */);
             src.onmessage = fn;
             // src1.close();
 

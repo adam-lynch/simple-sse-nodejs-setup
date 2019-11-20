@@ -1,12 +1,19 @@
 const http = require('http');
 const msg = " - Simple SSE server - ";
 const port = 5000;
+let numConnections = 0;
 
 // Create basic server
 http.createServer(function (request, response) {
-    
+    console.log(request.url)
+
+    if(request.url === '/redirect') {
+        response.writeHead(307);
+        response.write('Redirecting');
+        response.end();
+    }
     // answer only to event stream requests
-    if (request.headers.accept && request.headers.accept == 'text/event-stream') {
+    else if (request.headers.accept && request.headers.accept == 'text/event-stream') {
         
         // check if the resource is what we want
         // => http://domain.ext/sse
@@ -24,6 +31,7 @@ http.createServer(function (request, response) {
 
 // Setup the SSE "service" :)
 function sendSSE(request, response) {
+    numConnections++;
     
     // Setup headers
     // For ease of use: example for enabled CORS
@@ -40,11 +48,11 @@ function sendSSE(request, response) {
     var id = (new Date()).toLocaleTimeString();
 
     // send first message
-    constructSSE(response, id, (new Date()).toLocaleTimeString());
+    constructSSE(response, id, 'First message' + ' ' + request.headers['user-agent']);
     
     // send message every second and a half
     setInterval(function () {
-        constructSSE(response, id, (new Date()).toLocaleTimeString());
+        constructSSE(response, id, {interval: new Date().toLocaleTimeString()});
     }, 1500);
 }
 
@@ -52,5 +60,6 @@ function sendSSE(request, response) {
 function constructSSE(response, id, data) {
     response.write('id: ' + id + '\n');
     // response.write('event: ' + 'add' + '\n');
-    response.write("data: " + msg + port + '\n\n');
+    const obj = {msg: msg, port: port, data: data, numConnections: numConnections};
+    response.write("data: " + JSON.stringify(obj) + '\n\n');
 }
